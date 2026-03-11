@@ -84,6 +84,11 @@ jobs:
           tar -xzf php.tar.gz
           cd php-src-${VERSION}
 
+          # Download igbinary and add to ext directory for static build
+          wget https://github.com/igbinary/igbinary/archive/refs/heads/master.tar.gz -O igbinary.tar.gz
+          tar -xzf igbinary.tar.gz
+          mv igbinary-master ext/igbinary
+
           # Download phpredis and add to ext directory for static build
           wget https://github.com/phpredis/phpredis/archive/refs/heads/develop.tar.gz -O phpredis.tar.gz
           tar -xzf phpredis.tar.gz
@@ -102,7 +107,9 @@ jobs:
             --enable-bcmath \
             --enable-exif \
             --enable-soap \
+            --enable-igbinary \
             --enable-redis \
+            --enable-redis-igbinary \
             --enable-xml \
             --enable-dom \
             --enable-xmlreader \
@@ -175,6 +182,6 @@ jobs:
             - **Version:** ${{ needs.check-version.outputs.version }}
             - **Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual Rebuild' || 'Automatic Update' }}
             - **Source:** [PHP Upstream](https://github.com/php/php-src/releases/tag/${{ needs.check-version.outputs.version }})
-            - **Extensions:** mbstring, sockets, pcntl, intl, gd (freetype/jpeg/webp/xpm), bcmath, exif, soap, xml, dom, xmlreader, xmlwriter, simplexml, tokenizer, iconv, libxml, zlib, curl, openssl, zip, mysqli, pdo-mysql, sodium, gmp, readline, redis
+            - **Extensions:** mbstring, sockets, pcntl, intl, gd (freetype/jpeg/webp/xpm), bcmath, exif, soap, xml, dom, xmlreader, xmlwriter, simplexml, tokenizer, iconv, libxml, zlib, curl, openssl, zip, mysqli, pdo-mysql, sodium, gmp, readline, igbinary, redis (igbinary)
           files: all-bins/*
           token: ${{ secrets.GITHUB_TOKEN }}
