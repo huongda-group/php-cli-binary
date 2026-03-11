@@ -58,12 +58,12 @@ jobs:
         run: |
           if command -v apt-get &> /dev/null; then
             apt-get update && apt-get install -y \
-              build-essential wget tar autoconf pkg-config \
+              build-essential wget tar autoconf pkg-config bison re2c \
               libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
               libssl-dev libzip-dev zlib1g-dev libonig-dev
           else
             dnf groupinstall -y "Development Tools" && dnf install -y \
-              wget tar autoconf pkg-config \
+              wget tar autoconf pkg-config bison re2c \
               libxml2-devel sqlite-devel libcurl-devel \
               openssl-devel libzip-devel zlib-devel oniguruma-devel
           fi
