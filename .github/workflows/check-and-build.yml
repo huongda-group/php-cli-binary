@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       force_rebuild:
-        description: 'Bấm chọn để ép build lại version hiện tại'
+        description: 'Check and rebuild newest PHP release'
         type: boolean
         default: true
 
