@@ -37,17 +37,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os_name: "Ubuntu_25.10"
+          - os_name: "ubuntu_25.10"
             container: "ubuntu:25.10"
-          - os_name: "Ubuntu_25.04"
+          - os_name: "ubuntu_25.04"
             container: "ubuntu:25.04"
-          - os_name: "Ubuntu_24.04"
+          - os_name: "ubuntu_24.04"
             container: "ubuntu:24.04"
-          - os_name: "Ubuntu_22.04"
+          - os_name: "ubuntu_22.04"
             container: "ubuntu:22.04"
-          - os_name: "AlmaLinux_10"
+          - os_name: "almalinux_10"
             container: "almalinux:10"
-          - os_name: "AlmaLinux_9"
+          - os_name: "almalinux_9"
             container: "almalinux:9"
     runs-on: ubuntu-latest
     container:
@@ -60,14 +60,20 @@ jobs:
             apt-get update && apt-get install -y \
               build-essential wget tar autoconf pkg-config bison re2c \
               libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
-              libssl-dev libzip-dev zlib1g-dev libonig-dev
+              libssl-dev libzip-dev zlib1g-dev libonig-dev \
+              libicu-dev libsodium-dev libgmp-dev libpng-dev \
+              libjpeg-dev libfreetype6-dev libwebp-dev libxpm-dev \
+              libreadline-dev
           else
             dnf install -y epel-release || dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm || true
             dnf config-manager --set-enabled crb || dnf config-manager --set-enabled powertools || true
             dnf groupinstall -y "Development Tools" && dnf install -y \
               wget tar autoconf pkg-config bison re2c \
               libxml2-devel sqlite-devel libcurl-devel \
-              openssl-devel libzip-devel zlib-devel oniguruma-devel
+              openssl-devel libzip-devel zlib-devel oniguruma-devel \
+              libicu-devel libsodium-devel gmp-devel libpng-devel \
+              libjpeg-devel freetype-devel libwebp-devel libXpm-devel \
+              readline-devel
           fi
 
       - name: Download and Build PHP CLI
@@ -78,23 +84,54 @@ jobs:
           tar -xzf php.tar.gz
           cd php-src-${VERSION}
 
+          # Download phpredis and add to ext directory for static build
+          wget https://github.com/phpredis/phpredis/archive/refs/heads/develop.tar.gz -O phpredis.tar.gz
+          tar -xzf phpredis.tar.gz
+          mv phpredis-develop ext/redis
+
           ./buildconf --force
           ./configure \
             --prefix=/opt/php \
             --enable-cli \
             --enable-mbstring \
             --enable-opcache \
+            --enable-sockets \
+            --enable-pcntl \
+            --enable-intl \
+            --enable-gd \
+            --enable-bcmath \
+            --enable-exif \
+            --enable-soap \
+            --enable-redis \
+            --enable-xml \
+            --enable-dom \
+            --enable-xmlreader \
+            --enable-xmlwriter \
+            --enable-simplexml \
+            --enable-tokenizer \
+            --with-iconv \
+            --with-libxml \
             --with-zlib \
             --with-curl \
             --with-openssl \
             --with-zip \
             --with-mysqli \
-            --with-pdo-mysql
+            --with-pdo-mysql \
+            --with-sodium \
+            --with-gmp \
+            --with-readline \
+            --with-freetype \
+            --with-jpeg \
+            --with-webp \
+            --with-xpm \
+            --without-sqlite3 \
+            --without-pdo-sqlite
 
           make -j$(nproc)
 
           mkdir -p ../dist
           BINARY_NAME="php-${{ matrix.os_name }}"
+          strip --strip-all sapi/cli/php
           cp sapi/cli/php ../dist/${BINARY_NAME}
 
           cd ../dist
@@ -138,6 +175,6 @@ jobs:
             - **Version:** ${{ needs.check-version.outputs.version }}
             - **Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual Rebuild' || 'Automatic Update' }}
             - **Source:** [PHP Upstream](https://github.com/php/php-src/releases/tag/${{ needs.check-version.outputs.version }})
-            - **Extensions:** mbstring, opcache, zlib, curl, openssl, zip, mysqli, pdo-mysql
+            - **Extensions:** mbstring, sockets, pcntl, intl, gd (freetype/jpeg/webp/xpm), bcmath, exif, soap, xml, dom, xmlreader, xmlwriter, simplexml, tokenizer, iconv, libxml, zlib, curl, openssl, zip, mysqli, pdo-mysql, sodium, gmp, readline, redis
           files: all-bins/*
           token: ${{ secrets.GITHUB_TOKEN }}
