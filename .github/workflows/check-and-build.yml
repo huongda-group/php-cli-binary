@@ -62,6 +62,8 @@ jobs:
               libxml2-dev libsqlite3-dev libcurl4-openssl-dev \
               libssl-dev libzip-dev zlib1g-dev libonig-dev
           else
+            dnf install -y epel-release || dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(rpm -E %rhel).noarch.rpm || true
+            dnf config-manager --set-enabled crb || dnf config-manager --set-enabled powertools || true
             dnf groupinstall -y "Development Tools" && dnf install -y \
               wget tar autoconf pkg-config bison re2c \
               libxml2-devel sqlite-devel libcurl-devel \
